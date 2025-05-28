@@ -24,10 +24,16 @@ def parse_poscar(file_path, verbose=False):
         print(f"Total number of atoms: {total_atoms}")
 
     coord_line_index = 7
-    while lines[coord_line_index].strip().lower() not in ['direct', 'cartesian']:
+    while True:
+        line = lines[coord_line_index].strip().lower()
+        if line.startswith('direct') or line.startswith('d'):
+            coord_type = 'Direct'
+            break
+        elif line.startswith('cartesian') or line.startswith('c'):
+            coord_type = 'Cartesian'
+            break
         coord_line_index += 1
 
-    coord_type = lines[coord_line_index].strip()
 
     start_index = coord_line_index + 1
     atomic_positions = [list(map(float, lines[start_index + i].split()[:3])) for i in range(total_atoms)]
@@ -102,7 +108,11 @@ def substitute(parsed_data, substitution, site, target_position=None, verbose=Fa
     for pos in all_positions:
         new_lines.append(f"  {pos[0]:.16f}  {pos[1]:.16f}  {pos[2]:.16f}\n")
 
-    new_lines[0] = f'{substitution}_{site} defect {" ".join(f"{x:.16f}" for x in substituted_position)}\n'
+    new_lines[0] = f'{" ".join(f"{x:.5f}" for x in substituted_position)}\n'
+    
+    if verbose:
+        print(f"Defect position saved as {new_lines[0]}")
+        
     print(f"({substitution} → {site}, {substituted_position})")
 
     filename = f"{substitution}_{site}_POSCAR"
